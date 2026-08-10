@@ -91,7 +91,7 @@ btnBack.addEventListener("click", retour);
 
 function rendre(ecran, options, sansPush) {
   if (!sansPush) { /* la pile est gérée par aller() */ }
-  btnBack.hidden = PILE.length <= 1;
+  btnBack.style.display = PILE.length <= 1 ? "none" : "grid";
   var vues = {
     langue: vueLangue, age: vueAge, ville: vueVille,
     besoin: vueBesoin, liste: vueListe, fiche: vueFiche
@@ -212,8 +212,8 @@ var sheet = document.getElementById("sheet");
 var sheetBody = document.getElementById("sheet-body");
 document.getElementById("sheet-close").addEventListener("click", fermerSheet);
 sheet.addEventListener("click", function (e) { if (e.target === sheet) fermerSheet(); });
-function fermerSheet() { sheet.hidden = true; sheetBody.innerHTML = ""; }
-function ouvrirSheet(html) { sheetBody.innerHTML = html; sheet.hidden = false; }
+function fermerSheet() { sheet.classList.remove("ouvert"); sheetBody.innerHTML = ""; }
+function ouvrirSheet(html) { sheetBody.innerHTML = html; sheet.classList.add("ouvert"); }
 
 var URGENCES = [
   ["u.15", "u.15b", "15"], ["u.112", "u.112b", "112"], ["u.114", "u.114b", "114"],
@@ -260,7 +260,7 @@ document.addEventListener("click", function (e) {
   if (el.hasAttribute("data-langue")) {
     var code = el.getAttribute("data-langue");
     chargerLangue(code).then(function () {
-      if (!sheet.hidden) { var p = PILE[PILE.length - 1]; fermerSheet(); rendre(p.ecran, p.options, true); }
+      if (sheet.classList.contains("ouvert")) { var p = PILE[PILE.length - 1]; fermerSheet(); rendre(p.ecran, p.options, true); }
       else { aller("age"); }
     });
     return;
