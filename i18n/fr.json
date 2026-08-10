@@ -79,5 +79,21 @@
  "reset.non": "Annuler",
  "prive.note": "Cette application n'enregistre rien. Quand vous fermez, tout disparaît.",
  "maj.label": "Informations mises à jour le",
- "suite": "Continuer"
+ "suite": "Continuer",
+ "droits.titre": "Avez-vous une carte Vitale ?",
+ "droits.sous": "Sans carte Vitale, on peut quand même vous soigner.",
+ "droits.oui": "Oui, j'ai une carte Vitale",
+ "droits.encours": "J'ai fait la demande, j'attends",
+ "droits.non": "Non, ou je ne sais pas",
+ "d.titre": "Ouvrir vos droits à la santé",
+ "d.puma.n": "Protection universelle maladie (PUMa)",
+ "d.puma.d": "Pour toute personne qui vit en France de façon stable et régulière. C'est le droit de base : il rembourse le médecin, l'hôpital et les médicaments. Demande à la CPAM.",
+ "d.css.n": "Complémentaire santé solidaire (C2S)",
+ "d.css.d": "S'ajoute à la PUMa quand vos revenus sont faibles. Gratuite ou moins d'un euro par jour. Elle paye ce qui reste à votre charge.",
+ "d.ame.n": "Aide médicale de l'État (AME)",
+ "d.ame.d": "Pour les personnes sans titre de séjour, après trois mois en France. Demande à la CPAM avec un justificatif de présence.",
+ "d.ofii.n": "Rendez-vous santé (OFII)",
+ "d.ofii.d": "Visite médicale prévue après l'obtention de votre statut. Elle ne remplace pas un médecin traitant.",
+ "sansdroits.avis": "Ces lieux vous soignent même sans carte Vitale.",
+ "auto.note": "Lieu issu du répertoire national des établissements de santé. Téléphonez avant de vous déplacer."
 }

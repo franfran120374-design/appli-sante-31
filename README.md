@@ -85,20 +85,51 @@ Pense à mettre à jour le champ `maj` en haut du fichier, il s'affiche dans l'a
 
 ---
 
-## 4. Ajouter une langue
+## 4. Les 14 langues
 
-Six langues sont livrées : français, arabe, dari/persan, ukrainien, russe, anglais.
-Huit autres sont listées mais grisées : pachto, tigrinya, somali, kurmandji, albanais, géorgien, bengali, turc.
+Toutes actives : français, arabe, dari/persan, ukrainien, russe, anglais, turc, albanais, somali, kurmandji, pachto, tigrinya, géorgien, bengali. 97 clés chacune.
 
-Pour en activer une, par exemple le pachto :
+**Aucune n'a été relue par un interprète professionnel** — le champ `"revu": false` dans `data/langues.json` le trace. Le contenu est du vocabulaire de navigation, pas du contenu clinique, et la version française reste affichée en dessous, ce qui limite le risque. Mais fais relire, dans cet ordre de priorité :
 
-1. Copie `i18n/_gabarit.json` en `i18n/ps.json`.
-2. Donne `i18n/_reference-fr.txt` à un interprète (ISM ou les interprètes du Pôle Santé) — c'est un simple fichier `clé → phrase française`, il remplit la colonne de droite.
-3. Reporte les traductions dans `i18n/ps.json`.
-4. Dans `data/langues.json`, passe `"pret": false` à `true` pour la ligne `ps`.
-5. Ajoute `"./i18n/ps.json"` à la liste `FICHIERS` de `sw.js` et incrémente `VERSION`.
+1. **tigrinya, géorgien, bengali, pachto** — les moins fiables, à faire vérifier avant diffusion large
+2. **kurmandji, somali** — corrections mineures probables
+3. arabe, dari, ukrainien, russe, turc, albanais — relecture de confort
 
-**Les six traductions livrées n'ont pas été relues par un interprète professionnel.** Elles couvrent uniquement du vocabulaire de navigation, pas du contenu clinique, mais fais-les valider avant diffusion large.
+Donne `i18n/_reference-fr.txt` à l'interprète : c'est un fichier `clé → phrase française`, il n'a qu'à remplir la colonne de droite. Reporte ensuite dans le `.json` de la langue et passe `"revu": true`.
+
+Pour ajouter une **quinzième** langue : copie `i18n/_gabarit.json`, ajoute la ligne dans `data/langues.json`, ajoute le fichier à `FICHIERS` dans `sw.js`, incrémente `VERSION`.
+
+---
+
+## 4 bis. Le parcours « droits »
+
+Après la ville, l'appli demande si la personne a une carte Vitale. Trois réponses possibles, avec trois comportements :
+
+| Réponse | Effet |
+|---|---|
+| **Oui** | tous les lieux sont proposés |
+| **Demande en cours** | les lieux accessibles sans couverture remontent en tête |
+| **Non / je ne sais pas** | **seuls** les lieux marqués `sansdroits` sont affichés, avec un bandeau explicatif |
+
+C'est le filtre qui évite d'envoyer quelqu'un sans couverture chez un médecin qui lui demandera 30 € d'avance.
+
+Le besoin « Ouvrir mes droits » ouvre un écran d'explication (PUMa, C2S, AME, rendez-vous santé OFII) traduit dans les 14 langues, suivi des lieux où faire la démarche. Ces textes sont dans les fichiers `i18n/`, clés `d.puma.n`, `d.puma.d`, etc.
+
+---
+
+## 4 ter. L'annuaire automatique FINESS
+
+`data/structures-finess-31.json` — 617 structures, générées depuis le répertoire national des établissements de santé (open data, Licence Ouverte 2.0) : 394 pharmacies, 154 lieux de consultation, 64 structures de santé mentale (CMP, CMPP, CSAPA), PMI, CeGIDD, centres de vaccination.
+
+**Ne modifie jamais ce fichier à la main**, il est écrasé à chaque régénération :
+
+```powershell
+python maj-finess.py
+```
+
+Le script télécharge les données, filtre le département 31, rattache chaque structure à une zone par proximité géographique, et réécrit le JSON. Fais-le tourner tous les six mois.
+
+Les fiches FINESS s'affichent **après** les fiches de `structures-31.json` : ton annuaire à toi reste prioritaire. C'est voulu — FINESS donne le nom et l'adresse, mais ne sait rien de la gratuité, de l'interprétariat ou de l'accueil des personnes sans droits. Tout ce qui compte vraiment pour ton public est dans le fichier que tu maintiens.
 
 ---
 

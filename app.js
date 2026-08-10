@@ -6,7 +6,7 @@
 
 "use strict";
 
-var ETAT = { langue: null, dir: "ltr", age: null, ville: null, zone: null, besoin: null };
+var ETAT = { langue: null, dir: "ltr", age: null, ville: null, zone: null, droits: null, besoin: null };
 var T = {};        // traductions de la langue choisie
 var FR = {};       // traductions françaises, toujours chargées (affichage double)
 var LANGUES = [], VILLES = [], DATA = { structures: [], maj: "" };
@@ -93,8 +93,8 @@ function rendre(ecran, options, sansPush) {
   if (!sansPush) { /* la pile est gérée par aller() */ }
   btnBack.style.display = PILE.length <= 1 ? "none" : "grid";
   var vues = {
-    langue: vueLangue, age: vueAge, ville: vueVille,
-    besoin: vueBesoin, liste: vueListe, fiche: vueFiche
+    langue: vueLangue, age: vueAge, ville: vueVille, droits: vueDroits,
+    besoin: vueBesoin, liste: vueListe, fiche: vueFiche, dispositifs: vueDispositifs
   };
   app.innerHTML = vues[ecran](options || {});
   app.scrollTop = 0;
@@ -138,6 +138,31 @@ function vueVille() {
   return h + "</div>";
 }
 
+function vueDroits() {
+  crumb.textContent = ETAT.ville;
+  var h = "<h1>" + bilingue("droits.titre") + "</h1><p class='sub'>" + esc(t("droits.sous")) + "</p><div class='grid'>";
+  ["oui", "encours", "non"].forEach(function (d) {
+    h += '<button class="choice" data-droits="' + d + '"><span class="pic">' +
+      icone('<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M3 10h18M7 14h4"/>') +
+      "</span><span><span class='lead'>" + esc(t("droits." + d)) + "</span>" +
+      ligneEcho("droits." + d) + "</span></button>";
+  });
+  return h + "</div>";
+}
+
+var DISPOSITIFS = ["puma", "css", "ame", "ofii"];
+function vueDispositifs() {
+  var h = "<h1>" + bilingue("d.titre") + "</h1>";
+  DISPOSITIFS.forEach(function (d) {
+    h += "<div class='carte'><h3 style='direction:inherit'>" + esc(t("d." + d + ".n")) + "</h3><p style='margin:6px 0 0'>" +
+      esc(t("d." + d + ".d")) + "</p>" +
+      (ETAT.langue !== "fr" ? "<p class='fr-echo' style='margin-top:8px'>" + esc(fr("d." + d + ".n")) + "</p>" : "") +
+      "</div>";
+  });
+  h += "<h2>" + esc(t("liste.sous")) + "</h2>" + cartesStructures(filtrer());
+  return h;
+}
+
 function vueBesoin() {
   crumb.textContent = ETAT.ville + " · " + t("age." + ETAT.age);
   var h = "<h1>" + bilingue("besoin.titre") + "</h1><p class='sub'>" + esc(t("besoin.sous")) + "</p>" +
@@ -151,28 +176,46 @@ function vueBesoin() {
   return h;
 }
 
+function sansDroits(s) { return s.attributs.indexOf("sansdroits") !== -1; }
+
 function filtrer() {
-  return DATA.structures.filter(function (s) {
+  var liste = DATA.structures.filter(function (s) {
     return s.besoins.indexOf(ETAT.besoin) !== -1 &&
       s.ages.indexOf(ETAT.age) !== -1 &&
       s.zones.indexOf(ETAT.zone) !== -1;
   });
+  // Sans couverture maladie, on ne montre que les lieux qui soignent quand meme.
+  if (ETAT.droits === "non") liste = liste.filter(sansDroits);
+  return liste.sort(function (x, y) {
+    var a1 = x.source === "FINESS" ? 1 : 0, b1 = y.source === "FINESS" ? 1 : 0;
+    if (a1 !== b1) return a1 - b1;                       // fiches verifiees d'abord
+    if (ETAT.droits === "encours") {
+      var a2 = sansDroits(x) ? 0 : 1, b2 = sansDroits(y) ? 0 : 1;
+      if (a2 !== b2) return a2 - b2;
+    }
+    return x.nom.localeCompare(y.nom);
+  }).slice(0, 40);
 }
 
-function vueListe() {
-  var liste = filtrer();
-  var h = "<h1>" + bilingue("b." + ETAT.besoin) + "</h1><p class='sub'>" + esc(t("liste.sous")) + "</p>";
-  if (!liste.length) return h + "<div class='carte'><p>" + esc(t("liste.vide")) + "</p></div>";
-  liste.forEach(function (s) {
-    h += "<div class='carte'><h3>" + esc(s.nom) + "</h3><p class='adr'>" + esc(s.adresse) + "</p>" +
+function noteDe(s) { return s.source === "FINESS" ? t("auto.note") : s.note; }
+
+function cartesStructures(liste) {
+  if (!liste.length) return "<div class='carte'><p>" + esc(t("liste.vide")) + "</p></div>";
+  return liste.map(function (s) {
+    return "<div class='carte'><h3>" + esc(s.nom) + "</h3><p class='adr'>" + esc(s.adresse) + "</p>" +
       "<div class='tags'>" + s.attributs.map(function (a) {
         return "<span class='tag " + (a === "rdv" ? "attention" : "oui") + "'>" + esc(t("attr." + a)) + "</span>";
       }).join("") + "</div>" +
       "<div class='actions'><button class='btn' data-fiche='" + s.id + "'>" +
       icone('<path d="M9 5l7 7-7 7"/>') + esc(t("suite")) + "</button></div></div>";
-  });
-  h += "<p class='maj'>" + esc(t("maj.label")) + " " + esc(DATA.maj) + "</p>";
-  return h;
+  }).join("");
+}
+
+function vueListe() {
+  var h = "<h1>" + bilingue("b." + ETAT.besoin) + "</h1><p class='sub'>" + esc(t("liste.sous")) + "</p>";
+  if (ETAT.droits === "non") h += "<p class='note' style='border-color:var(--sauge)'>" + esc(t("sansdroits.avis")) + "</p>";
+  h += cartesStructures(filtrer());
+  return h + "<p class='maj'>" + esc(t("maj.label")) + " " + esc(DATA.maj) + "</p>";
 }
 
 function vueFiche(opt) {
@@ -200,7 +243,7 @@ function vueFiche(opt) {
 
   h += "<h2>" + esc(t("fiche.montrer")) + "</h2><div class='carte'><p class='sub' style='margin:0 0 10px'>" +
     esc(t("fiche.montrer.aide")) + "</p><p class='pf' style='color:var(--brique);font-weight:700;direction:ltr'>" +
-    esc(s.note) + "</p></div>";
+    esc(noteDe(s)) + "</p></div>";
 
   h += "<p class='maj'>" + esc(t("maj.label")) + " " + esc(DATA.maj) +
     (s.verifie ? "" : " — fiche à vérifier") + "</p>";
@@ -247,7 +290,7 @@ function panneauLangue() {
 
 /* ---------- délégation de clics ---------- */
 document.addEventListener("click", function (e) {
-  var el = e.target.closest("[data-langue],[data-age],[data-ville],[data-besoin],[data-fiche],[data-open],[data-parler]");
+  var el = e.target.closest("[data-langue],[data-age],[data-ville],[data-droits],[data-besoin],[data-fiche],[data-open],[data-parler]");
   if (!el) return;
 
   if (el.hasAttribute("data-parler")) { parler(el.getAttribute("data-parler")); return; }
@@ -269,9 +312,13 @@ document.addEventListener("click", function (e) {
   if (el.hasAttribute("data-ville")) {
     ETAT.ville = el.getAttribute("data-ville");
     ETAT.zone = el.getAttribute("data-zone");
-    aller("besoin"); return;
+    aller("droits"); return;
   }
-  if (el.hasAttribute("data-besoin")) { ETAT.besoin = el.getAttribute("data-besoin"); aller("liste"); return; }
+  if (el.hasAttribute("data-droits")) { ETAT.droits = el.getAttribute("data-droits"); aller("besoin"); return; }
+  if (el.hasAttribute("data-besoin")) {
+    ETAT.besoin = el.getAttribute("data-besoin");
+    aller(ETAT.besoin === "droits" ? "dispositifs" : "liste"); return;
+  }
   if (el.hasAttribute("data-fiche")) { aller("fiche", { id: el.getAttribute("data-fiche") }); return; }
 });
 
@@ -297,7 +344,7 @@ function chargerLangue(code) {
 
 /* ---------- démarrage ---------- */
 function demarrer() {
-  ETAT = { langue: "fr", dir: "ltr", age: null, ville: null, zone: null, besoin: null };
+  ETAT = { langue: "fr", dir: "ltr", age: null, ville: null, zone: null, droits: null, besoin: null };
   T = FR; PILE = [];
   appliquerLangue();
   aller("langue");
@@ -307,9 +354,11 @@ Promise.all([
   json("i18n/fr.json"),
   json("data/langues.json"),
   json("data/villes.json"),
-  json("data/structures-31.json")
+  json("data/structures-31.json"),
+  json("data/structures-finess-31.json").catch(function () { return { structures: [] }; })
 ]).then(function (r) {
   FR = r[0]; LANGUES = r[1]; VILLES = r[2]; DATA = r[3];
+  DATA.structures = DATA.structures.concat(r[4].structures || []);
   demarrer();
 }).catch(function (err) {
   app.innerHTML = "<h1>Les données n'ont pas pu être chargées</h1><p class='sub'>" + esc(err.message) +

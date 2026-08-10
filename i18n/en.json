@@ -79,5 +79,21 @@
  "reset.non": "Cancel",
  "prive.note": "This app saves nothing. When you close it, everything disappears.",
  "maj.label": "Information updated on",
- "suite": "Continue"
+ "suite": "Continue",
+ "droits.titre": "Do you have a carte Vitale?",
+ "droits.sous": "You can still be treated without one.",
+ "droits.oui": "Yes, I have a carte Vitale",
+ "droits.encours": "I applied, I am waiting",
+ "droits.non": "No, or I do not know",
+ "d.titre": "Opening your health rights",
+ "d.puma.n": "Universal health protection (PUMa)",
+ "d.puma.d": "For anyone living in France stably and lawfully. This is the basic right: it covers doctors, hospital and medicines. Apply at the CPAM.",
+ "d.css.n": "Solidarity health top-up (C2S)",
+ "d.css.d": "Added to PUMa when your income is low. Free or less than one euro a day. It pays what is left for you to pay.",
+ "d.ame.n": "State medical aid (AME)",
+ "d.ame.d": "For people without a residence permit, after three months in France. Apply at the CPAM with proof of presence.",
+ "d.ofii.n": "Health appointment (OFII)",
+ "d.ofii.d": "Medical check-up scheduled after you obtain your status. It does not replace a regular doctor.",
+ "sansdroits.avis": "These places treat you even without a carte Vitale.",
+ "auto.note": "Listed in the national register of health facilities. Call before going there."
 }
