@@ -1,11 +1,14 @@
 /* Service worker : met tout en cache pour que l'appli marche sans connexion.
    Changer VERSION a chaque mise a jour des donnees pour forcer le rafraichissement. */
-var VERSION = "sante31-v2";
+var VERSION = "sante31-v4";
 var FICHIERS = [
   "./", "./index.html", "./styles.css", "./app.js", "./manifest.webmanifest",
   "./data/langues.json", "./data/villes.json", "./data/structures-31.json",
   "./i18n/fr.json", "./i18n/en.json", "./i18n/ar.json",
   "./i18n/fa.json", "./i18n/uk.json", "./i18n/ru.json",
+  "./i18n/tr.json", "./i18n/sq.json", "./i18n/so.json", "./i18n/ku.json",
+  "./i18n/ps.json", "./i18n/ti.json", "./i18n/ka.json", "./i18n/bn.json",
+  "./data/structures-finess-31.json",
   "./icons/icon-192.png", "./icons/icon-512.png"
 ];
 

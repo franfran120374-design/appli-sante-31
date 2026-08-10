@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12332F">
+<title>Santé 31 — orientation</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="styles.css?v=3">
+</head>
+<body>
+
+<header id="topbar">
+  <button id="btn-back" class="icon-btn" aria-label="Retour" hidden>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 4 7 12l8 8"/></svg>
+  </button>
+  <span id="crumb"></span>
+  <button id="btn-reset" class="icon-btn" aria-label="Effacer et recommencer">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></svg>
+  </button>
+</header>
+
+<main id="app" tabindex="-1"></main>
+
+<nav id="dock">
+  <button class="dock-btn dock-danger" data-open="urgence">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2 20h20L12 3zM12 9v5M12 17v.5"/></svg>
+    <span data-i18n="dock.urgence">Urgence</span>
+  </button>
+  <button class="dock-btn" data-open="phrases">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4V5z"/></svg>
+    <span data-i18n="dock.phrases">Phrases</span>
+  </button>
+  <button class="dock-btn" data-open="langue">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c5 5 5 13 0 18M12 3C7 8 7 16 12 21"/></svg>
+    <span data-i18n="dock.langue">Langue</span>
+  </button>
+</nav>
+
+<div id="sheet" class="sheet">
+  <div class="sheet-inner" role="dialog" aria-modal="true">
+    <button id="sheet-close" class="sheet-close" aria-label="Fermer">&#215;</button>
+    <div id="sheet-body"></div>
+  </div>
+</div>
+
+<script src="app.js?v=3"></script>
+</body>
+</html>
