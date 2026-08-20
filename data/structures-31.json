@@ -1,5 +1,5 @@
 {
- "maj": "2026-08-10",
+ "maj": "2026-08-20",
  "avertissement": "Coordonnees rassemblees depuis des sources publiques et NON encore verifiees par l'equipe. Chaque fiche doit etre appelee et confirmee avant diffusion aux patients. Passer verifie a true une fois le controle fait.",
  "structures": [
   {
@@ -197,6 +197,34 @@
    "attributs": ["interprete"],
    "docs": ["aucun"],
    "note": "Interprétariat professionnel par téléphone. C'est le soignant ou le service qui appelle : montrez-lui cette fiche.",
+   "verifie": false
+  },
+  {
+   "id": "cofrimi-31",
+   "nom": "COFRIMI — interprétariat médico-social en présentiel",
+   "adresse": "6 impasse André Navarra, 31100 Toulouse",
+   "tel": "",
+   "transport": "Bus ligne 87",
+   "zones": ["toulouse", "agglo", "muret", "comminges", "lauragais"],
+   "besoins": ["interprete"],
+   "ages": ["a", "b", "c", "d"],
+   "attributs": ["interprete", "rdv"],
+   "docs": ["aucun"],
+   "note": "Interprétariat en présentiel (complémentaire au téléphone d'ISM). C'est le professionnel qui réserve. Vérifier si une convention existe déjà entre le Forum réfugiés et Cofrimi avant toute nouvelle démarche, et confirmer le numéro direct sur cofrimi.com.",
+   "verifie": false
+  },
+  {
+   "id": "crpoc-31",
+   "nom": "CRPOc — Centre Régional de Psychotraumatisme Occitanie (CHU Toulouse)",
+   "adresse": "CHU Toulouse — coordonnées directes à confirmer",
+   "tel": "0561772233",
+   "transport": "",
+   "zones": ["toulouse", "agglo", "muret", "comminges", "lauragais"],
+   "besoins": ["psy"],
+   "ages": ["a", "b", "c", "d"],
+   "attributs": ["rdv"],
+   "docs": ["aucun"],
+   "note": "Consultations spécialisées psychotraumatisme, sans condition de ressource ni de langue parlée (référentiel ARS Occitanie). Le numéro indiqué est le standard du CHU : demander le service de psychotraumatologie / CRPOc, la ligne directe n'a pas pu être confirmée.",
    "verifie": false
   }
  ]
