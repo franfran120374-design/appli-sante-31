@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#12332F">
+<title>Santé 31 — vue soignant</title>
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="styles.css?v=3">
+<style>
+  /* Ajouts propres à la vue soignant — n'affecte pas styles.css ni le parcours patient */
+  #filtres{background:var(--papier-haut);border:1.5px solid var(--trait);border-radius:var(--r);padding:14px 16px;margin-bottom:18px}
+  #filtres h2{margin:0 0 10px;font-size:16px}
+  .rangee{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .rangee:last-child{margin-bottom:0}
+  .puce{
+    font:inherit;font-size:14px;font-weight:600;padding:7px 12px;border-radius:999px;
+    border:1.5px solid var(--trait);background:var(--papier);color:var(--encre);cursor:pointer;
+  }
+  .puce.actif{background:var(--encre);border-color:var(--encre);color:#fff}
+  select#recherche-texte,input#recherche-texte{
+    width:100%;padding:9px 10px;border:1.5px solid var(--trait);border-radius:10px;font:inherit;font-size:15px;
+  }
+  select.puce-select{font:inherit;font-size:14px;font-weight:600;padding:7px 10px;border-radius:10px;border:1.5px solid var(--trait);background:#fff;color:var(--encre)}
+  .badge{font-size:12px;font-weight:700;padding:3px 8px;border-radius:999px;margin-inline-start:8px;vertical-align:middle}
+  .badge.ok{background:#E4F0EA;color:#2C6B51}
+  .badge.warn{background:var(--ambre-clair);color:#8A5A08}
+  .compte{color:var(--encre-doux);font-size:14px;margin:0 0 14px}
+  .carte .note-int{margin-top:10px;font-size:14px;color:var(--encre)}
+  .carte .tel-ligne{font-size:15px;font-weight:700;margin-top:2px}
+</style>
+</head>
+<body>
+
+<header id="topbar">
+  <span id="crumb">Santé 31 — vue soignant</span>
+</header>
+
+<main id="app" style="padding-bottom:40px">
+  <p class="sub">Le même annuaire que l'appli patient, en français, pour préparer une orientation pendant l'entretien. Rien n'est enregistré ni transmis : tout reste dans cette page.</p>
+
+  <div id="filtres">
+    <h2>Besoin</h2>
+    <div class="rangee" id="rangee-besoins"></div>
+
+    <h2>Zone / âge / couverture</h2>
+    <div class="rangee">
+      <select id="f-zone" class="puce-select">
+        <option value="">Toutes zones</option>
+        <option value="toulouse">Toulouse</option>
+        <option value="agglo">Agglomération</option>
+        <option value="muret">Muret</option>
+        <option value="comminges">Comminges</option>
+        <option value="lauragais">Lauragais</option>
+      </select>
+      <select id="f-age" class="puce-select">
+        <option value="">Tout âge</option>
+        <option value="a">0-6 ans</option>
+        <option value="b">7-17 ans</option>
+        <option value="c">18-59 ans</option>
+        <option value="d">60 ans et plus</option>
+      </select>
+      <select id="f-droits" class="puce-select">
+        <option value="">Couverture : indifférent</option>
+        <option value="oui">A des droits ouverts</option>
+        <option value="encours">Demande en cours</option>
+        <option value="non">Sans couverture</option>
+      </select>
+    </div>
+
+    <h2>Recherche libre</h2>
+    <div class="rangee">
+      <input type="text" id="recherche-texte" placeholder="Nom, quartier, mot-clé…">
+    </div>
+
+    <div class="rangee" style="margin-top:4px">
+      <label style="display:flex;align-items:center;gap:8px;font-size:14px;color:var(--encre-doux)">
+        <input type="checkbox" id="f-nonverifie" checked>
+        Inclure les fiches non vérifiées
+      </label>
+    </div>
+  </div>
+
+  <p class="compte" id="compte">Chargement…</p>
+  <div id="resultats"></div>
+  <p class="maj" id="maj"></p>
+</main>
+
+<script>
+"use strict";
+
+var BESOINS = [
+  ["droits", "Ouvrir des droits"], ["medecin", "Médecin / consultation"], ["femme", "Santé femme"],
+  ["enfant", "Enfant / PMI"], ["psy", "Santé psychique"], ["depistage", "Dépistage"],
+  ["dents", "Dentaire"], ["pharmacie", "Pharmacie"], ["interprete", "Interprétariat"]
+];
+var ATTR_LABEL = {
+  gratuit: "Gratuit", rdv: "Sur rendez-vous", sansrdv: "Sans rendez-vous",
+  sansdroits: "Reçoit sans couverture", interprete: "Interprétariat sur place",
+  enfants: "Accueil enfants", femmes: "Accueil femmes"
+};
+var DOC_LABEL = {
+  identite: "pièce d'identité", attestation: "attestation de domicile ou de suivi",
+  vitale: "carte Vitale", domicile: "justificatif de domicile", ordonnance: "ordonnance", aucun: "aucun document requis"
+};
+
+var ETAT = { besoin: null, zone: "", age: "", droits: "", texte: "", nonverifie: true };
+var DATA = { structures: [], maj: "" };
+
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+  });
+}
+function telLien(n) { return "tel:" + String(n).replace(/\s/g, ""); }
+function carteLien(adr) { return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(adr); }
+function json(url) {
+  return fetch(url, { cache: "no-cache" }).then(function (r) {
+    if (!r.ok) throw new Error(url + " : " + r.status);
+    return r.json();
+  });
+}
+
+function rangeeBesoins() {
+  var h = '<button class="puce" data-besoin="">Tous</button>';
+  BESOINS.forEach(function (b) {
+    h += '<button class="puce" data-besoin="' + b[0] + '">' + esc(b[1]) + '</button>';
+  });
+  document.getElementById("rangee-besoins").innerHTML = h;
+}
+
+function sansDroits(s) { return s.attributs.indexOf("sansdroits") !== -1; }
+
+function filtrer() {
+  var q = ETAT.texte.trim().toLowerCase();
+  var liste = DATA.structures.filter(function (s) {
+    if (ETAT.besoin && s.besoins.indexOf(ETAT.besoin) === -1) return false;
+    if (ETAT.zone && s.zones.indexOf(ETAT.zone) === -1) return false;
+    if (ETAT.age && s.ages.indexOf(ETAT.age) === -1) return false;
+    if (!ETAT.nonverifie && s.verifie === false) return false;
+    if (q && (s.nom + " " + s.adresse + " " + (s.note || "")).toLowerCase().indexOf(q) === -1) return false;
+    return true;
+  });
+  if (ETAT.droits === "non") liste = liste.filter(sansDroits);
+  return liste.sort(function (x, y) {
+    var a1 = x.source === "FINESS" ? 1 : 0, b1 = y.source === "FINESS" ? 1 : 0;
+    if (a1 !== b1) return a1 - b1;
+    if (ETAT.droits === "encours") {
+      var a2 = sansDroits(x) ? 0 : 1, b2 = sansDroits(y) ? 0 : 1;
+      if (a2 !== b2) return a2 - b2;
+    }
+    return x.nom.localeCompare(y.nom);
+  });
+}
+
+function carte(s) {
+  var badge = s.verifie === false
+    ? '<span class="badge warn">à vérifier</span>'
+    : '<span class="badge ok">vérifié</span>';
+  var h = "<div class='carte'><h3>" + esc(s.nom) + badge + "</h3><p class='adr'>" + esc(s.adresse || "") +
+    (s.transport ? "<br>" + esc(s.transport) : "") + "</p>";
+  if (s.tel) h += "<p class='tel-ligne'><a href='" + telLien(s.tel) + "'>" + esc(s.tel) + "</a></p>";
+  h += "<div class='tags'>" + (s.besoins || []).map(function (b) {
+    var lbl = BESOINS.filter(function (x) { return x[0] === b; })[0];
+    return "<span class='tag'>" + esc(lbl ? lbl[1] : b) + "</span>";
+  }).join("") + (s.attributs || []).map(function (a) {
+    return "<span class='tag " + (a === "rdv" ? "attention" : "oui") + "'>" + esc(ATTR_LABEL[a] || a) + "</span>";
+  }).join("") + "</div>";
+  if (s.note) h += "<p class='note-int'>" + esc(s.note) + "</p>";
+  if (s.docs && s.docs.length) {
+    h += "<p class='note-int'><strong>À demander d'apporter :</strong> " +
+      s.docs.map(function (d) { return DOC_LABEL[d] || d; }).join(", ") + "</p>";
+  }
+  h += "<div class='actions'>" +
+    (s.tel ? "<a class='btn' href='" + telLien(s.tel) + "'>Appeler</a>" : "") +
+    (s.adresse ? "<a class='btn ghost' target='_blank' rel='noopener' href='" + carteLien(s.adresse) + "'>Itinéraire</a>" : "") +
+    "</div></div>";
+  return h;
+}
+
+function rendre() {
+  var liste = filtrer();
+  document.getElementById("compte").textContent = liste.length + " structure(s) correspondent au filtre.";
+  document.getElementById("resultats").innerHTML = liste.length
+    ? liste.map(carte).join("")
+    : "<div class='carte'><p>Aucune structure ne correspond à ces critères.</p></div>";
+  document.querySelectorAll(".puce[data-besoin]").forEach(function (btn) {
+    btn.classList.toggle("actif", btn.getAttribute("data-besoin") === ETAT.besoin);
+  });
+}
+
+document.getElementById("rangee-besoins").addEventListener("click", function (e) {
+  var btn = e.target.closest("[data-besoin]");
+  if (!btn) return;
+  ETAT.besoin = btn.getAttribute("data-besoin");
+  rendre();
+});
+document.getElementById("f-zone").addEventListener("change", function (e) { ETAT.zone = e.target.value; rendre(); });
+document.getElementById("f-age").addEventListener("change", function (e) { ETAT.age = e.target.value; rendre(); });
+document.getElementById("f-droits").addEventListener("change", function (e) { ETAT.droits = e.target.value; rendre(); });
+document.getElementById("f-nonverifie").addEventListener("change", function (e) { ETAT.nonverifie = e.target.checked; rendre(); });
+document.getElementById("recherche-texte").addEventListener("input", function (e) { ETAT.texte = e.target.value; rendre(); });
+
+rangeeBesoins();
+Promise.all([
+  json("data/structures-31.json"),
+  json("data/structures-finess-31.json").catch(function () { return { structures: [] }; })
+]).then(function (r) {
+  DATA.structures = r[0].structures.concat(r[1].structures || []);
+  DATA.maj = r[0].maj;
+  document.getElementById("maj").textContent = "Données à jour du " + DATA.maj + " — mêmes fichiers que l'appli patient.";
+  rendre();
+}).catch(function (err) {
+  document.getElementById("resultats").innerHTML = "<div class='carte'><p>Les données n'ont pas pu être chargées : " +
+    esc(err.message) + ". Ouvrez cette page via un serveur local (voir README), pas en double-cliquant dessus.</p></div>";
+});
+</script>
+</body>
+</html>
