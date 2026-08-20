@@ -1,6 +1,6 @@
 /* Service worker : met tout en cache pour que l'appli marche sans connexion.
    Changer VERSION a chaque mise a jour des donnees pour forcer le rafraichissement. */
-var VERSION = "sante31-v5";
+var VERSION = "sante31-v6";
 var FICHIERS = [
   "./", "./index.html", "./styles.css", "./app.js", "./manifest.webmanifest",
   "./soignant.html",
